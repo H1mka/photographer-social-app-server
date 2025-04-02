@@ -40,8 +40,19 @@ class UserController {
     return res.status(200).json(jwt)
   }
 
-  async authorization(req, res) {
+  async login(req, res) {
     const { email, password } = req.body
+
+    if (!email || !password) return ApiError.badRequest('Invalid data')
+
+    const user = await User.findOne({ where: { email } })
+
+    if (!user)
+      return ApiError.badRequest("User with current email does'nt exist")
+
+    const passwordCheck = await bcrypt.compare(password, user.password)
+    console.log(passwordCheck)
+    res.status(200).json({ success: passwordCheck })
   }
 
   async auth(req, res, next) {
