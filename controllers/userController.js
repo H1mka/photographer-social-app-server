@@ -5,6 +5,24 @@ const ApiError = require('../error/ApiError')
 const validator = require('../helpers/validator')
 const { User } = require('../models/models')
 
+const prepareUserData = (user = {}) => {
+  if (typeof user !== 'object') return {}
+  const { name, last_name, email, role } = user
+
+  return { name, last_name, email, role }
+}
+
+const createJWTToken = (user = {}) => {
+  if (typeof user !== 'object') return ''
+  const { id, name, last_name, email } = user
+
+  return jsonwebtoken.sign(
+    { id, name, last_name, email },
+    process.env.JWT_SECRET,
+    { expiresIn: '24h' }
+  )
+}
+
 class UserController {
   async registration(req, res, next) {
     const { name, last_name, email, password, desciption, photo } = req.body
@@ -31,28 +49,34 @@ class UserController {
       desciption,
     })
 
-    const jwt = jsonwebtoken.sign(
-      { id: user.id, name, last_name, email },
-      process.env.JWT_SECRET,
-      { expiresIn: '24h' }
-    )
+    if (!user) return next(ApiError.badRequest())
 
-    return res.status(200).json(jwt)
+    res.status(200).json({
+      data: prepareUserData(user),
+      jwt: createJWTToken(user),
+      message: 'Registration successfuly',
+      success: true,
+    })
   }
 
-  async login(req, res) {
+  async login(req, res, next) {
     const { email, password } = req.body
 
-    if (!email || !password) return ApiError.badRequest('Invalid data')
+    if (!email || !password) return next(ApiError.badRequest('Invalid data'))
 
     const user = await User.findOne({ where: { email } })
-
     if (!user)
-      return ApiError.badRequest("User with current email does'nt exist")
+      return next(ApiError.badRequest("User with current email doesn't exist"))
 
-    const passwordCheck = await bcrypt.compare(password, user.password)
-    console.log(passwordCheck)
-    res.status(200).json({ success: passwordCheck })
+    const passwordMatch = await bcrypt.compare(password, user.password)
+    if (!passwordMatch) return next(ApiError.badRequest('Wrong password'))
+
+    res.status(200).json({
+      data: prepareUserData(user),
+      jwt: createJWTToken(user),
+      message: 'Login successfuly',
+      success: true,
+    })
   }
 
   async auth(req, res, next) {
