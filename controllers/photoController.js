@@ -69,11 +69,21 @@ class PhotoController {
       if (!id) return next(ApiError.badRequest('Invalid id'))
 
       const photos = await Photo.findAll({ where: { user_id: id } })
-      if (!photos) return next(ApiError.badRequest('Photo is not defined'))
+      if (!photos) return next(ApiError.badRequest('Photos is not defined'))
 
-      const data = photos.map((item) => ({ ...item.dataValues }))
+      res.status(200).json({ data: photos, message: '', success: true })
+    } catch (error) {
+      next(ApiError.badRequest(error.message))
+    }
+  }
 
-      res.status(200).json({ data, message: '', success: true })
+  async getAll(req, res, next) {
+    try {
+      const photos = await Photo.findAll()
+
+      if (!photos) return next(ApiError.badRequest('Photos is not defined'))
+
+      res.status(200).json({ data: photos, message: '', success: true })
     } catch (error) {
       next(ApiError.badRequest(error.message))
     }
