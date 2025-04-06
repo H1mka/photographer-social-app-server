@@ -3,16 +3,23 @@ const uuid = require('uuid')
 const path = require('path')
 const Helper = require('../helpers/helper')
 const fs = require('fs')
-const { Photo } = require('../models/photo')
+const { Photo, Tag } = require('../models/models')
+
+const tagObject = {
+  model: Tag,
+  attributes: ['id', 'name'],
+  through: { attributes: [] },
+}
 
 class PhotoController {
   async createPhoto(req, res, next) {
     try {
-      const { name, description = '' } = req.body
+      const { name, description = '', tags = [] } = req.body
       const { image } = req.files
       const { userId, userName, userLastName } = Helper.decodeJwtToken(req)
-      console.log(userId, userName, userLastName)
+      const photoTags = JSON.parse(tags)
 
+      /* Validations */
       if (!name) return next(ApiError.badRequest('Invalid data'))
 
       if (Array.isArray(image))
@@ -22,6 +29,7 @@ class PhotoController {
       if (!userId || !userName || !userLastName)
         return next(ApiError.badRequest('Error with user data'))
 
+      /* Upload photo to folder and db */
       const folderName = `${userName}_${userLastName}_${userId}`.trim()
       const uploadPath = path.resolve(__dirname, '..', 'static', folderName)
       if (!fs.existsSync(uploadPath)) {
@@ -42,6 +50,17 @@ class PhotoController {
 
       if (!photo) return next(ApiError.badRequest())
 
+      /* Find and assign tags to photo */
+      const tagRecords = await Promise.all(
+        photoTags.map(async (id) => {
+          const tag = await Tag.findOne({
+            where: { id },
+          })
+          return tag
+        })
+      )
+      await photo.setTags(tagRecords)
+
       return res.status(200).json({ data: photo })
     } catch (error) {
       next(ApiError.badRequest(error.message))
@@ -53,12 +72,17 @@ class PhotoController {
       const { id } = req.params
       if (!id) return next(ApiError.badRequest('Invalid id'))
 
-      const photo = await Photo.findOne({ where: { id } })
+      const photo = await Photo.findOne({
+        where: { id },
+        include: tagObject,
+      })
       if (!photo) return next(ApiError.badRequest('Photo is not defined'))
 
-      res
-        .status(200)
-        .json({ data: { ...photo.dataValues }, message: '', success: true })
+      res.status(200).json({
+        data: { ...photo.dataValues },
+        message: '',
+        success: true,
+      })
     } catch (error) {
       next(ApiError.badRequest(error.mesage))
     }
@@ -69,7 +93,10 @@ class PhotoController {
       const { id } = req.params
       if (!id) return next(ApiError.badRequest('Invalid id'))
 
-      const photos = await Photo.findAll({ where: { user_id: id } })
+      const photos = await Photo.findAll({
+        where: { user_id: id },
+        include: tagObject,
+      })
       if (!photos) return next(ApiError.badRequest('Photos is not defined'))
 
       res.status(200).json({ data: photos, message: '', success: true })
@@ -80,7 +107,7 @@ class PhotoController {
 
   async getAll(req, res, next) {
     try {
-      const photos = await Photo.findAll()
+      const photos = await Photo.findAll({ include: tagObject })
 
       if (!photos) return next(ApiError.badRequest('Photos is not defined'))
 
