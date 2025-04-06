@@ -5,7 +5,7 @@ const errorMiddleware = (err, req, res, next) => {
     return res.status(err.status).json({ message: err.message })
   }
 
-  err.status(500).json({ message: 'Unexpected Error' })
+  res.status(500).json({ message: 'Unexpected Error' })
 }
 
 module.exports = errorMiddleware
