@@ -37,6 +37,7 @@ class PhotoController {
         name,
         description,
         image: fileName,
+        image_folder: folderName,
       })
 
       if (!photo) return next(ApiError.badRequest())
