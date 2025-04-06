@@ -1,0 +1,90 @@
+const bcrypt = require('bcrypt')
+const jsonwebtoken = require('jsonwebtoken')
+
+const ApiError = require('../error/ApiError')
+const validator = require('../helpers/validator')
+const { User } = require('../models/models')
+
+const prepareUserData = (user = {}) => {
+  if (typeof user !== 'object') return {}
+  const { name, last_name, email, role } = user
+
+  return { name, last_name, email, role }
+}
+
+const createJWTToken = (user = {}) => {
+  if (typeof user !== 'object') return ''
+  const { id, name, last_name, email } = user
+
+  return jsonwebtoken.sign(
+    { id, name, last_name, email },
+    process.env.JWT_SECRET,
+    { expiresIn: '24h' }
+  )
+}
+
+class UserController {
+  async registration(req, res, next) {
+    const { name, last_name, email, password, desciption, photo } = req.body
+
+    if (!validator.validatePassword(password))
+      return next(
+        ApiError.badRequest('Password must be greater than 6 symbols')
+      )
+
+    if (!name || !last_name || !email)
+      return next(ApiError.badRequest('Invalid data'))
+
+    const findUser = await User.findOne({ where: { email } })
+
+    if (findUser)
+      return next(ApiError.badRequest('User with current email exist'))
+
+    const hashPassword = await bcrypt.hash(password, 5)
+    const user = await User.create({
+      name,
+      last_name,
+      email,
+      password: hashPassword,
+      desciption,
+    })
+
+    if (!user) return next(ApiError.badRequest())
+
+    res.status(200).json({
+      data: prepareUserData(user),
+      jwt: createJWTToken(user),
+      message: 'Registration successfuly',
+      success: true,
+    })
+  }
+
+  async login(req, res, next) {
+    const { email, password } = req.body
+
+    if (!email || !password) return next(ApiError.badRequest('Invalid data'))
+
+    const user = await User.findOne({ where: { email } })
+    if (!user)
+      return next(ApiError.badRequest("User with current email doesn't exist"))
+
+    const passwordMatch = await bcrypt.compare(password, user.password)
+    if (!passwordMatch) return next(ApiError.badRequest('Wrong password'))
+
+    res.status(200).json({
+      data: prepareUserData(user),
+      jwt: createJWTToken(user),
+      message: 'Login successfuly',
+      success: true,
+    })
+  }
+
+  async auth(req, res, next) {
+    const { id } = req.query
+    if (!id) return next(ApiError.badRequest('Id is not defined'))
+
+    res.status(200).json({ message: 'Test' + id })
+  }
+}
+
+module.exports = new UserController()

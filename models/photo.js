@@ -6,6 +6,8 @@ const Photo = sequelize.define('photo', {
   user_id: { type: DataTypes.INTEGER, allowNull: false },
   name: { type: DataTypes.STRING },
   description: { type: DataTypes.STRING },
+  image: { type: DataTypes.STRING, allowNull: false },
+  image_folder: { type: DataTypes.STRING },
   created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
 })
 
