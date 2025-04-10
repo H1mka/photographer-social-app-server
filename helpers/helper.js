@@ -12,7 +12,7 @@ class Helper {
     const token = Helper.getJwtTokenFromRequest(req)
     if (!token) return {}
 
-    const decode = jsonwebtoken.decode(authorization, process.env.JWT_SECRET)
+    const decode = jsonwebtoken.decode(token, process.env.JWT_SECRET)
     return {
       userId: decode.id,
       userName: decode.name,
