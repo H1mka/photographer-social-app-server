@@ -3,7 +3,7 @@ const uuid = require('uuid')
 const path = require('path')
 const Helper = require('../helpers/helper')
 const fs = require('fs')
-const { Photo, Tag } = require('../models/models')
+const { Photo, Tag, User } = require('../models/models')
 
 const tagObject = {
   model: Tag,
@@ -95,8 +95,15 @@ class PhotoController {
 
       const photos = await Photo.findAll({
         where: { user_id: id },
-        include: tagObject,
+        include: [
+          tagObject,
+          {
+            model: User,
+            attributes: ['id', 'name', 'last_name'],
+          },
+        ],
       })
+
       if (!photos) return next(ApiError.badRequest('Photos is not defined'))
 
       res.status(200).json({ data: photos, message: '', success: true })
@@ -107,7 +114,20 @@ class PhotoController {
 
   async getAll(req, res, next) {
     try {
-      const photos = await Photo.findAll({ include: tagObject })
+      const { page = 1, limit = 25 } = req.query
+      const offset = page * limit - limit
+      const photos = await Photo.findAndCountAll({
+        include: [
+          tagObject,
+          {
+            model: User,
+            attributes: ['id', 'name', 'last_name'],
+          },
+        ],
+        distinct: true,
+        limit,
+        offset,
+      })
 
       if (!photos) return next(ApiError.badRequest('Photos is not defined'))
 
