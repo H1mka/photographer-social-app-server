@@ -38,7 +38,7 @@ class UserController {
     const findUser = await User.findOne({ where: { email } })
 
     if (findUser)
-      return next(ApiError.badRequest('User with current email exist'))
+      return next(ApiError.badRequest('User with current email already exist'))
 
     const hashPassword = await bcrypt.hash(password, 5)
     const user = await User.create({
