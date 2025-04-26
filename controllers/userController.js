@@ -3,6 +3,7 @@ const jsonwebtoken = require('jsonwebtoken')
 
 const ApiError = require('../error/ApiError')
 const validator = require('../helpers/validator')
+const Helper = require('../helpers/helper')
 const { User } = require('../models/models')
 
 const prepareUserData = (user = {}) => {
@@ -79,11 +80,17 @@ class UserController {
     })
   }
 
-  async auth(req, res, next) {
-    const { id } = req.query
-    if (!id) return next(ApiError.badRequest('Id is not defined'))
+  async checkAuth(req, res, next) {
+    const { userId } = Helper.decodeJwtToken(req)
+    const user = await User.findOne({ where: { id: userId } })
+    if (!user) next(ApiError.badRequest())
 
-    res.status(200).json({ message: 'Test' + id })
+    res.status(200).json({
+      data: prepareUserData(user),
+      jwt: createJWTToken(user),
+      message: '',
+      success: true,
+    })
   }
 }
 

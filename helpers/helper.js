@@ -26,6 +26,13 @@ class Helper {
 
     return jsonwebtoken.verify(token, process.env.JWT_SECRET)
   }
+
+  static createPhotoUrl(photo) {
+    if (typeof photo !== 'object') return ''
+    const { image, image_folder } = photo
+
+    return `${process.env.HOST_NAME}/${image_folder}/${image}`
+  }
 }
 
 module.exports = Helper

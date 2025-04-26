@@ -11,6 +11,11 @@ const tagObject = {
   through: { attributes: [] },
 }
 
+const userObject = {
+  model: User,
+  attributes: ['id', 'name', 'last_name'],
+}
+
 class PhotoController {
   async createPhoto(req, res, next) {
     try {
@@ -74,9 +79,12 @@ class PhotoController {
 
       const photo = await Photo.findOne({
         where: { id },
-        include: tagObject,
+        include: [tagObject, userObject],
       })
       if (!photo) return next(ApiError.badRequest('Photo is not defined'))
+
+      // add photo src
+      photo.dataValues.src = Helper.createPhotoUrl(photo)
 
       res.status(200).json({
         data: { ...photo.dataValues },
@@ -95,16 +103,16 @@ class PhotoController {
 
       const photos = await Photo.findAll({
         where: { user_id: id },
-        include: [
-          tagObject,
-          {
-            model: User,
-            attributes: ['id', 'name', 'last_name'],
-          },
-        ],
+        include: [tagObject, userObject],
       })
 
       if (!photos) return next(ApiError.badRequest('Photos is not defined'))
+
+      // add photo src
+      photos.rows = photos.rows.map((item) => {
+        item.dataValues.src = Helper.createPhotoUrl(item)
+        return item
+      })
 
       res.status(200).json({ data: photos, message: '', success: true })
     } catch (error) {
@@ -117,19 +125,19 @@ class PhotoController {
       const { page = 1, limit = 25 } = req.query
       const offset = page * limit - limit
       const photos = await Photo.findAndCountAll({
-        include: [
-          tagObject,
-          {
-            model: User,
-            attributes: ['id', 'name', 'last_name'],
-          },
-        ],
+        include: [tagObject, userObject],
         distinct: true,
         limit,
         offset,
       })
 
       if (!photos) return next(ApiError.badRequest('Photos is not defined'))
+
+      // add photo src
+      photos.rows = photos.rows.map((item) => {
+        item.dataValues.src = Helper.createPhotoUrl(item)
+        return item
+      })
 
       res.status(200).json({ data: photos, message: '', success: true })
     } catch (error) {
