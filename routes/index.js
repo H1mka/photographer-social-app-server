@@ -3,9 +3,11 @@ const router = new Router()
 const userRouter = require('./userRouter')
 const photoRouter = require('./photoRouter')
 const tagRouter = require('./tagRouter')
+const commentRouter = require('./commentRouter')
 
 router.use('/user', userRouter)
 router.use('/photo', photoRouter)
 router.use('/tag', tagRouter)
+router.use('/comment', commentRouter)
 
 module.exports = router
