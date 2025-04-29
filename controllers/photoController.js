@@ -1,8 +1,6 @@
 const ApiError = require('../error/ApiError')
-const uuid = require('uuid')
-const path = require('path')
 const Helper = require('../helpers/helper')
-const fs = require('fs')
+const FilesHelper = require('../helpers/filesHelper')
 const { Photo, Tag, User } = require('../models/models')
 
 const tagObject = {
@@ -35,22 +33,15 @@ class PhotoController {
         return next(ApiError.badRequest('Error with user data'))
 
       /* Upload photo to folder and db */
-      const folderName = `${userName}_${userLastName}_${userId}`.trim()
-      const uploadPath = path.resolve(__dirname, '..', 'static', folderName)
-      if (!fs.existsSync(uploadPath)) {
-        fs.mkdirSync(uploadPath)
-      }
+      const filesHelper = new FilesHelper(image, userName, userLastName, userId)
+      filesHelper.uploadPhotoToFolder()
 
-      const fileName = uuid.v4() + '.jpg'
-      const filePath = path.join(uploadPath, fileName)
-
-      image.mv(filePath)
       const photo = await Photo.create({
         user_id: userId,
         name,
         description,
-        image: fileName,
-        image_folder: folderName,
+        image: filesHelper.fileName,
+        image_folder: filesHelper.folderName,
       })
 
       if (!photo) return next(ApiError.badRequest())
