@@ -30,6 +30,7 @@ class Helper {
   static createPhotoUrl(photo) {
     if (typeof photo !== 'object') return ''
     const { image, image_folder } = photo
+    if (!image || !image_folder) return null
 
     return `${process.env.HOST_NAME}/${image_folder}/${image}`
   }
@@ -37,6 +38,7 @@ class Helper {
   static createUserAvatarUrl(user) {
     if (typeof user !== 'object') return ''
     const { avatar, avatar_folder } = user
+    if (!avatar || !avatar_folder) return null
 
     return `${process.env.HOST_NAME}/${avatar_folder}/${avatar}`
   }

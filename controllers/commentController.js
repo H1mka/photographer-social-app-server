@@ -1,9 +1,10 @@
 const ApiError = require('../error/ApiError')
+const Helper = require('../helpers/helper')
 const { Comment, User } = require('../models/models')
 
 const userObject = {
   model: User,
-  attributes: ['id', 'name', 'last_name'],
+  attributes: ['id', 'name', 'last_name', 'avatar', 'avatar_folder'],
 }
 
 class CommentController {
@@ -41,6 +42,11 @@ class CommentController {
       include: [userObject],
     })
     if (!comments) return next(ApiError.badRequest())
+
+    comments.forEach((item) => {
+      const { user } = item
+      user.dataValues.avatar_src = Helper.createUserAvatarUrl(user)
+    })
 
     res.status(200).json({
       data: comments,
