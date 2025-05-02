@@ -33,8 +33,8 @@ class PhotoController {
         return next(ApiError.badRequest('Error with user data'))
 
       /* Upload photo to folder and db */
-      const filesHelper = new FilesHelper(image, userName, userLastName, userId)
-      filesHelper.uploadPhotoToFolder()
+      const filesHelper = new FilesHelper(userName, userLastName, userId)
+      filesHelper.uploadPhotoToFolder(image)
 
       const photo = await Photo.create({
         user_id: userId,

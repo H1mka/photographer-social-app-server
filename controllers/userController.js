@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt')
 const jsonwebtoken = require('jsonwebtoken')
 
+const FilesHelper = require('../helpers/filesHelper')
 const ApiError = require('../error/ApiError')
 const validator = require('../helpers/validator')
 const Helper = require('../helpers/helper')
@@ -8,9 +9,12 @@ const { User } = require('../models/models')
 
 const prepareUserData = (user = {}) => {
   if (typeof user !== 'object') return {}
-  const { name, last_name, email, role } = user
 
-  return { name, last_name, email, role }
+  const { name, last_name, email, role, avatar, avatar_folder } = user
+  const avatar_src =
+    avatar && avatar_folder ? Helper.createUserAvatarUrl(user) : null
+
+  return { name, last_name, email, role, avatar_src }
 }
 
 const createJWTToken = (user = {}) => {
@@ -26,7 +30,8 @@ const createJWTToken = (user = {}) => {
 
 class UserController {
   async registration(req, res, next) {
-    const { name, last_name, email, password, desciption, photo } = req.body
+    const { name, last_name, email, password, desciption } = req.body
+    const { avatar = null } = req.files || {}
 
     if (!validator.validatePassword(password))
       return next(
@@ -42,6 +47,7 @@ class UserController {
       return next(ApiError.badRequest('User with current email already exist'))
 
     const hashPassword = await bcrypt.hash(password, 5)
+
     const user = await User.create({
       name,
       last_name,
@@ -51,6 +57,16 @@ class UserController {
     })
 
     if (!user) return next(ApiError.badRequest())
+
+    // save avatar image
+    if (avatar) {
+      const filesHelper = new FilesHelper(name, last_name, user.id, 'avatar_')
+      filesHelper.uploadPhotoToFolder(avatar)
+
+      user.avatar = filesHelper.fileName
+      user.avatar_folder = filesHelper.folderName
+      await user.save()
+    }
 
     res.status(200).json({
       data: prepareUserData(user),

@@ -3,21 +3,13 @@ const uuid = require('uuid')
 const path = require('path')
 
 class FilesHelper {
-  image = {}
   userName = ''
   userLastName = ''
   userId = ''
   folderName = ''
   fileName = ''
 
-  constructor(
-    image = {},
-    userName = '',
-    userLastName = '',
-    userId = '',
-    filePrefix = ''
-  ) {
-    this.image = image
+  constructor(userName = '', userLastName = '', userId = '', filePrefix = '') {
     this.userName = userName
     this.userLastName = userLastName
     this.userId = userId
@@ -35,10 +27,10 @@ class FilesHelper {
     this.fileName = filePrefix + uuid.v4() + '.jpg'
   }
 
-  uploadPhotoToFolder() {
+  uploadPhotoToFolder(image) {
     /* Upload photo to folder and create folder if needed */
     try {
-      const { folderName, fileName, image } = this
+      const { folderName, fileName } = this
       const uploadPath = path.resolve(__dirname, '..', 'static', folderName)
       const filePath = path.join(uploadPath, fileName)
 

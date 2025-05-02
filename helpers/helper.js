@@ -33,6 +33,13 @@ class Helper {
 
     return `${process.env.HOST_NAME}/${image_folder}/${image}`
   }
+
+  static createUserAvatarUrl(user) {
+    if (typeof user !== 'object') return ''
+    const { avatar, avatar_folder } = user
+
+    return `${process.env.HOST_NAME}/${avatar_folder}/${avatar}`
+  }
 }
 
 module.exports = Helper
