@@ -10,11 +10,11 @@ const { User } = require('../models/models')
 const prepareUserData = (user = {}) => {
   if (typeof user !== 'object') return {}
 
-  const { name, last_name, email, role, avatar, avatar_folder } = user
+  const { id, name, last_name, email, role, avatar, avatar_folder } = user
   const avatar_src =
     avatar && avatar_folder ? Helper.createUserAvatarUrl(user) : null
 
-  return { name, last_name, email, role, avatar_src }
+  return { id, name, last_name, email, role, avatar_src }
 }
 
 const createJWTToken = (user = {}) => {

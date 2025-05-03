@@ -9,24 +9,31 @@ const userObject = {
 
 class CommentController {
   async create(req, res, next) {
-    const { user_id, photo_id, description } = req.body
+    const { photo_id, description } = req.body
 
-    if (!user_id || !photo_id)
+    if (!req.user || !photo_id)
       return next(ApiError.badRequest('Invalid user or photo id'))
 
     if (!description)
       return next(ApiError.badRequest('The comment text is required'))
 
     const comment = await Comment.create({
-      user_id,
+      user_id: req.user?.id,
       photo_id,
       description,
     })
 
     if (!comment) return next(ApiError.badRequest())
 
+    const findComment = await Comment.findByPk(comment.id, {
+      include: [userObject],
+    })
+    const { user } = findComment.dataValues
+
+    user.dataValues.avatar_src = Helper.createUserAvatarUrl(user)
+
     res.status(200).json({
-      data: {},
+      data: findComment,
       message: 'The comment was successfully created',
       success: true,
     })
