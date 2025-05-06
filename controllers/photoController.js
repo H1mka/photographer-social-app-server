@@ -90,11 +90,16 @@ class PhotoController {
   async getAllUserPhotos(req, res, next) {
     try {
       const { id } = req.params
+      const { page = 1, limit = 25 } = req.query
+      const offset = page * limit - limit
       if (!id) return next(ApiError.badRequest('Invalid id'))
 
-      const photos = await Photo.findAll({
+      const photos = await Photo.findAndCountAll({
         where: { user_id: id },
         include: [tagObject, userObject],
+        distinct: true,
+        limit,
+        offset,
       })
 
       if (!photos) return next(ApiError.badRequest('Photos is not defined'))

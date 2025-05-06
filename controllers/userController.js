@@ -10,11 +10,11 @@ const { User } = require('../models/models')
 const prepareUserData = (user = {}) => {
   if (typeof user !== 'object') return {}
 
-  const { id, name, last_name, email, role, avatar, avatar_folder } = user
+  const { id, name, last_name, email, role, avatar, bio, avatar_folder } = user
   const avatar_src =
     avatar && avatar_folder ? Helper.createUserAvatarUrl(user) : null
 
-  return { id, name, last_name, email, role, avatar_src }
+  return { id, name, last_name, email, role, bio, avatar_src }
 }
 
 const createJWTToken = (user = {}) => {
@@ -105,6 +105,19 @@ class UserController {
       data: prepareUserData(user),
       jwt: createJWTToken(user),
       message: '',
+      success: true,
+    })
+  }
+
+  async getUserInfo(req, res, next) {
+    const { id } = req.params
+    if (!id) return next(ApiError.badRequest('Wrong user id'))
+
+    const user = await User.findByPk(id)
+    if (!user) return next(ApiError.badRequest())
+
+    res.status(200).json({
+      data: prepareUserData(user),
       success: true,
     })
   }
