@@ -1,14 +1,17 @@
 const ApiError = require('../error/ApiError')
-const uuid = require('uuid')
-const path = require('path')
 const Helper = require('../helpers/helper')
-const fs = require('fs')
-const { Photo, Tag } = require('../models/models')
+const FilesHelper = require('../helpers/filesHelper')
+const { Photo, Tag, User } = require('../models/models')
 
 const tagObject = {
   model: Tag,
   attributes: ['id', 'name'],
   through: { attributes: [] },
+}
+
+const userObject = {
+  model: User,
+  attributes: ['id', 'name', 'last_name'],
 }
 
 class PhotoController {
@@ -30,22 +33,15 @@ class PhotoController {
         return next(ApiError.badRequest('Error with user data'))
 
       /* Upload photo to folder and db */
-      const folderName = `${userName}_${userLastName}_${userId}`.trim()
-      const uploadPath = path.resolve(__dirname, '..', 'static', folderName)
-      if (!fs.existsSync(uploadPath)) {
-        fs.mkdirSync(uploadPath)
-      }
+      const filesHelper = new FilesHelper(userName, userLastName, userId)
+      filesHelper.uploadPhotoToFolder(image)
 
-      const fileName = uuid.v4() + '.jpg'
-      const filePath = path.join(uploadPath, fileName)
-
-      image.mv(filePath)
       const photo = await Photo.create({
         user_id: userId,
         name,
         description,
-        image: fileName,
-        image_folder: folderName,
+        image: filesHelper.fileName,
+        image_folder: filesHelper.folderName,
       })
 
       if (!photo) return next(ApiError.badRequest())
@@ -74,9 +70,12 @@ class PhotoController {
 
       const photo = await Photo.findOne({
         where: { id },
-        include: tagObject,
+        include: [tagObject, userObject],
       })
       if (!photo) return next(ApiError.badRequest('Photo is not defined'))
+
+      // add photo src
+      photo.dataValues.src = Helper.createPhotoUrl(photo)
 
       res.status(200).json({
         data: { ...photo.dataValues },
@@ -95,9 +94,16 @@ class PhotoController {
 
       const photos = await Photo.findAll({
         where: { user_id: id },
-        include: tagObject,
+        include: [tagObject, userObject],
       })
+
       if (!photos) return next(ApiError.badRequest('Photos is not defined'))
+
+      // add photo src
+      photos.rows = photos.rows.map((item) => {
+        item.dataValues.src = Helper.createPhotoUrl(item)
+        return item
+      })
 
       res.status(200).json({ data: photos, message: '', success: true })
     } catch (error) {
@@ -107,9 +113,22 @@ class PhotoController {
 
   async getAll(req, res, next) {
     try {
-      const photos = await Photo.findAll({ include: tagObject })
+      const { page = 1, limit = 25 } = req.query
+      const offset = page * limit - limit
+      const photos = await Photo.findAndCountAll({
+        include: [tagObject, userObject],
+        distinct: true,
+        limit,
+        offset,
+      })
 
       if (!photos) return next(ApiError.badRequest('Photos is not defined'))
+
+      // add photo src
+      photos.rows = photos.rows.map((item) => {
+        item.dataValues.src = Helper.createPhotoUrl(item)
+        return item
+      })
 
       res.status(200).json({ data: photos, message: '', success: true })
     } catch (error) {

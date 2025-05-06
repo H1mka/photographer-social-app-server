@@ -8,7 +8,8 @@ const User = sequelize.define('user', {
   email: { type: DataTypes.STRING, unique: true },
   password: { type: DataTypes.STRING },
   description: { type: DataTypes.STRING },
-  photo: { type: DataTypes.STRING },
+  avatar: { type: DataTypes.STRING },
+  avatar_folder: { type: DataTypes.STRING },
   role: { type: DataTypes.STRING, defaultValue: 'USER' },
 })
 

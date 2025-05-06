@@ -12,7 +12,7 @@ class Helper {
     const token = Helper.getJwtTokenFromRequest(req)
     if (!token) return {}
 
-    const decode = jsonwebtoken.decode(authorization, process.env.JWT_SECRET)
+    const decode = jsonwebtoken.decode(token, process.env.JWT_SECRET)
     return {
       userId: decode.id,
       userName: decode.name,
@@ -25,6 +25,22 @@ class Helper {
     if (!token) return false
 
     return jsonwebtoken.verify(token, process.env.JWT_SECRET)
+  }
+
+  static createPhotoUrl(photo) {
+    if (typeof photo !== 'object') return ''
+    const { image, image_folder } = photo
+    if (!image || !image_folder) return null
+
+    return `${process.env.HOST_NAME}/${image_folder}/${image}`
+  }
+
+  static createUserAvatarUrl(user) {
+    if (typeof user !== 'object') return ''
+    const { avatar, avatar_folder } = user
+    if (!avatar || !avatar_folder) return null
+
+    return `${process.env.HOST_NAME}/${avatar_folder}/${avatar}`
   }
 }
 

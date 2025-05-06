@@ -6,7 +6,6 @@ const Comment = sequelize.define('comment', {
   user_id: { type: DataTypes.INTEGER, allowNull: false },
   photo_id: { type: DataTypes.INTEGER, allowNull: false },
   description: { type: DataTypes.STRING },
-  created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
 })
 
 module.exports = { Comment }
