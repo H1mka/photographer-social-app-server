@@ -6,16 +6,7 @@ const ApiError = require('../error/ApiError')
 const validator = require('../helpers/validator')
 const Helper = require('../helpers/helper')
 const { User } = require('../models/models')
-
-const prepareUserData = (user = {}) => {
-  if (typeof user !== 'object') return {}
-
-  const { id, name, last_name, email, role, avatar, bio, avatar_folder } = user
-  const avatar_src =
-    avatar && avatar_folder ? Helper.createUserAvatarUrl(user) : null
-
-  return { id, name, last_name, email, role, bio, avatar_src }
-}
+const { prepareUserData } = require('../helpers/user')
 
 const createJWTToken = (user = {}) => {
   if (typeof user !== 'object') return ''
@@ -114,7 +105,8 @@ class UserController {
     if (!id) return next(ApiError.badRequest('Wrong user id'))
 
     const user = await User.findByPk(id)
-    if (!user) return next(ApiError.badRequest())
+
+    if (!user) return next(ApiError.badRequest("User doesn't exist"))
 
     res.status(200).json({
       data: prepareUserData(user),

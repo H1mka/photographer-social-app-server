@@ -6,8 +6,6 @@ const Collection = sequelize.define('collection', {
   user_id: { type: DataTypes.INTEGER, allowNull: false },
   name: { type: DataTypes.STRING },
   description: { type: DataTypes.STRING },
-  created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
-  updated_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
 })
 
 const CollectionPhotos = sequelize.define('collection_photos', {

@@ -1,5 +1,5 @@
 const ApiError = require('../error/ApiError')
-const Helper = require('../helpers/helper')
+const { createUserAvatarUrl } = require('../helpers/user')
 const { Comment, User } = require('../models/models')
 
 const userObject = {
@@ -30,7 +30,7 @@ class CommentController {
     })
     const { user } = findComment.dataValues
 
-    user.dataValues.avatar_src = Helper.createUserAvatarUrl(user)
+    user.dataValues.avatar_src = createUserAvatarUrl(user)
 
     res.status(200).json({
       data: findComment,
@@ -52,7 +52,7 @@ class CommentController {
 
     comments.forEach((item) => {
       const { user } = item
-      user.dataValues.avatar_src = Helper.createUserAvatarUrl(user)
+      user.dataValues.avatar_src = createUserAvatarUrl(user)
     })
 
     res.status(200).json({
