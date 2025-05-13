@@ -128,6 +128,32 @@ class CollectionController {
       next(ApiError.badRequest(error.message))
     }
   }
+
+  async getCollection(req, res, next) {
+    try {
+      const { id } = req.query
+      if (!id) return next(ApiError.badRequest('Please, try later'))
+
+      const collection = await Collection.findByPk(id, {
+        include: [userObject],
+      })
+      if (!collection)
+        return next(ApiError.badRequest("Collection doesn't exist"))
+      const photosCount = await collection.countPhotos()
+      const collectionData = collection.toJSON()
+
+      res.status(200).json({
+        data: {
+          ...collectionData,
+          user: prepareUserData(collectionData.user),
+          photosCount,
+        },
+        success: true,
+      })
+    } catch (error) {
+      next(ApiError.badRequest(error.message))
+    }
+  }
 }
 
 module.exports = new CollectionController()
