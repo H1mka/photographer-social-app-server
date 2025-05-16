@@ -6,10 +6,17 @@ const {
   CollectionPhotos,
   Photo,
   User,
+  Tag,
 } = require('../models/models')
 
 const userObject = {
   model: User,
+}
+
+const tagObject = {
+  model: Tag,
+  attributes: ['id', 'name'],
+  through: { attributes: [] },
 }
 
 class CollectionController {
@@ -150,6 +157,48 @@ class CollectionController {
         },
         success: true,
       })
+    } catch (error) {
+      next(ApiError.badRequest(error.message))
+    }
+  }
+
+  async getCollectionPhotos(req, res, next) {
+    try {
+      const { id: collection_id } = req.query
+      const { page = 1, limit = 25 } = req.query
+      const offset = page * limit - limit
+      if (!collection_id) return next(ApiError.badRequest('Invalid id'))
+
+      const collection = await Collection.findByPk(collection_id)
+
+      if (!collection) return next(ApiError.badRequest('Collection not found'))
+
+      const photos = await Photo.findAndCountAll({
+        include: [
+          {
+            model: Collection,
+            where: { id: collection_id },
+            attributes: [],
+            through: { attributes: [] },
+          },
+          tagObject,
+          userObject,
+        ],
+        distinct: true,
+        limit: limit,
+        offset: offset,
+        order: [['createdAt', 'DESC']],
+      })
+
+      if (!photos) return next(ApiError.badRequest('Photos is not defined'))
+
+      // add photo src
+      photos.rows = photos.rows.map((item) => {
+        item.dataValues.src = Helper.createPhotoUrl(item)
+        return item
+      })
+
+      res.status(200).json({ data: photos, message: '', success: true })
     } catch (error) {
       next(ApiError.badRequest(error.message))
     }
