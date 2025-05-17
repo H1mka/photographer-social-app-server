@@ -1,7 +1,7 @@
 const ApiError = require('../error/ApiError')
 const Helper = require('../helpers/helper')
 const FilesHelper = require('../helpers/filesHelper')
-const { Photo, Tag, User } = require('../models/models')
+const { Photo, Tag, User, Collection } = require('../models/models')
 
 const tagObject = {
   model: Tag,
@@ -14,10 +14,23 @@ const userObject = {
   attributes: ['id', 'name', 'last_name'],
 }
 
+const handleGetOnePhoto = async (id) => {
+  const photo = await Photo.findOne({
+    where: { id },
+    include: [tagObject, userObject],
+  })
+  if (!photo) return null
+
+  // add photo src
+  photo.dataValues.src = Helper.createPhotoUrl(photo)
+
+  return photo
+}
+
 class PhotoController {
   async createPhoto(req, res, next) {
     try {
-      const { name, description = '', tags = [] } = req.body
+      const { name, description = '', tags = [], collection = null } = req.body
       const { image } = req.files
       const { userId, userName, userLastName } = Helper.decodeJwtToken(req)
       const photoTags = JSON.parse(tags)
@@ -57,7 +70,24 @@ class PhotoController {
       )
       await photo.setTags(tagRecords)
 
-      return res.status(200).json({ data: photo })
+      // add photo to collection (optional)
+      if (collection) {
+        const targetCollection = await Collection.findByPk(collection)
+        if (!targetCollection) {
+          return next(ApiError.badRequest('Collection not found'))
+        }
+
+        await photo.addCollection(targetCollection)
+      }
+
+      const fullPhoto = await handleGetOnePhoto(photo.dataValues.id)
+      if (!fullPhoto) return next(ApiError.badRequest('Photo is not defined'))
+
+      return res.status(200).json({
+        data: fullPhoto,
+        success: true,
+        message: 'Photo has been successfully created',
+      })
     } catch (error) {
       next(ApiError.badRequest(error.message))
     }
@@ -68,14 +98,16 @@ class PhotoController {
       const { id } = req.params
       if (!id) return next(ApiError.badRequest('Invalid id'))
 
-      const photo = await Photo.findOne({
-        where: { id },
-        include: [tagObject, userObject],
-      })
+      const photo = await handleGetOnePhoto(id)
       if (!photo) return next(ApiError.badRequest('Photo is not defined'))
+      // const photo = await Photo.findOne({
+      //   where: { id },
+      //   include: [tagObject, userObject],
+      // })
+      // if (!photo) return next(ApiError.badRequest('Photo is not defined'))
 
-      // add photo src
-      photo.dataValues.src = Helper.createPhotoUrl(photo)
+      // // add photo src
+      // photo.dataValues.src = Helper.createPhotoUrl(photo)
 
       res.status(200).json({
         data: { ...photo.dataValues },
@@ -97,6 +129,7 @@ class PhotoController {
       const photos = await Photo.findAndCountAll({
         where: { user_id: id },
         include: [tagObject, userObject],
+        order: [['createdAt', 'DESC']],
         distinct: true,
         limit,
         offset,
@@ -122,6 +155,7 @@ class PhotoController {
       const offset = page * limit - limit
       const photos = await Photo.findAndCountAll({
         include: [tagObject, userObject],
+        order: [['createdAt', 'DESC']],
         distinct: true,
         limit,
         offset,

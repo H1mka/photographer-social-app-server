@@ -27,6 +27,22 @@ class TagController {
 
     res.status(200).json({ message: 'Tag deleted successfully', success: true })
   }
+
+  async getTags(req, res, next) {
+    const tags = await Tag.findAll()
+    if (!tags) return next(ApiError.badRequest())
+
+    const formatted = tags.map((item) => {
+      const { id, name } = item.toJSON()
+      return { value: id, name }
+    })
+
+    res.status(200).json({
+      data: formatted,
+      message: '',
+      success: true,
+    })
+  }
 }
 
 module.exports = new TagController()

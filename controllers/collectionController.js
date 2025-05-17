@@ -203,6 +203,25 @@ class CollectionController {
       next(ApiError.badRequest(error.message))
     }
   }
+
+  async getUserCollectionsNames(req, res, next) {
+    const { user_id } = req.query
+    if (!user_id) return next(ApiError.badRequest('Wrong user id'))
+
+    const collections = await Collection.findAll({ where: { user_id } })
+
+    if (!collections) return next(ApiError.badRequest('No collections'))
+
+    const formatted = collections.map((item) => {
+      const { id, name } = item.toJSON()
+      return { value: id, name }
+    })
+
+    res.status(200).json({
+      data: formatted,
+      success: true,
+    })
+  }
 }
 
 module.exports = new CollectionController()

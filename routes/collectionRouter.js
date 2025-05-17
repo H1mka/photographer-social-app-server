@@ -13,5 +13,9 @@ router.post(
 router.get('/getCollectionsPreview', collectionController.getCollectionsPreview)
 router.get('/getCollection', collectionController.getCollection)
 router.get('/getCollectionPhotos', collectionController.getCollectionPhotos)
+router.get(
+  '/getUserCollectionsNames',
+  collectionController.getUserCollectionsNames
+)
 
 module.exports = router
