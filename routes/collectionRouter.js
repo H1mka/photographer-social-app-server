@@ -2,9 +2,14 @@ const Router = require('express')
 const router = new Router()
 const collectionController = require('../controllers/collectionController')
 const authMiddleware = require('../middleware/AuthMiddleware')
-// const timeoutMiddleware = require('../middleware/TimeoutMiddleware')
+const timeoutMiddleware = require('../middleware/TimeoutMiddleware')
 
-router.post('/create', authMiddleware, collectionController.createCollection)
+router.post(
+  '/create',
+  authMiddleware,
+  timeoutMiddleware,
+  collectionController.createCollection
+)
 router.post(
   '/addPhotoToCollection',
   authMiddleware,

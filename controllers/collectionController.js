@@ -23,7 +23,7 @@ class CollectionController {
   async createCollection(req, res, next) {
     const { name, description } = req.body
     const { user } = req
-    console.log(name)
+
     if (!name) return next(ApiError.badRequest('Name is required'))
     if (!user?.id) return next(ApiError.badRequest('Something went wrong'))
 
