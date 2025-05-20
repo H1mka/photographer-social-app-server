@@ -222,6 +222,20 @@ class CollectionController {
       success: true,
     })
   }
+
+  async deleteCollection(req, res, next) {
+    const { id } = req.params
+
+    const collection = await Collection.findByPk(id)
+    if (!collection) return next(ApiError.badRequest('No collection'))
+
+    collection.destroy()
+
+    res.status(200).json({
+      message: 'Collection was successfully removed',
+      success: true,
+    })
+  }
 }
 
 module.exports = new CollectionController()

@@ -22,5 +22,11 @@ router.get(
   '/getUserCollectionsNames',
   collectionController.getUserCollectionsNames
 )
+router.delete(
+  '/delete/:id',
+  timeoutMiddleware,
+  authMiddleware,
+  collectionController.deleteCollection
+)
 
 module.exports = router
