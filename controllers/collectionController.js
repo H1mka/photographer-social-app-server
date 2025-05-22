@@ -51,6 +51,29 @@ class CollectionController {
     }
   }
 
+  async editCollection(req, res, next) {
+    const { id } = req.params
+    const { name, description } = req.body
+    if (!id) return next(ApiError.badRequest('Collection ID is required'))
+
+    const collection = await Collection.findByPk(id)
+
+    if (!collection) {
+      return next(ApiError.notFound('Collection not found'))
+    }
+
+    if (name !== undefined) collection.name = name
+    if (description !== undefined) collection.description = description
+
+    await collection.save()
+
+    return res.status(200).json({
+      data: collection,
+      message: 'Collection was successfully updated',
+      success: true,
+    })
+  }
+
   async addPhotoToCollection(req, res, next) {
     const { photo_ids = [], collection_id } = req.body
 
@@ -103,6 +126,7 @@ class CollectionController {
       const collections = await Collection.findAll({
         where,
         include: [userObject],
+        order: [['createdAt', 'DESC']],
       })
 
       const formatted = await Promise.all(

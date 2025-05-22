@@ -29,4 +29,11 @@ router.delete(
   collectionController.deleteCollection
 )
 
+router.put(
+  '/edit/:id',
+  timeoutMiddleware,
+  authMiddleware,
+  collectionController.editCollection
+)
+
 module.exports = router
