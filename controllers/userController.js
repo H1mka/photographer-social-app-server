@@ -113,6 +113,26 @@ class UserController {
       success: true,
     })
   }
+
+  async getAllUsers(req, res, next) {
+    try {
+      const users = await User.findAll()
+
+      if (!users) return res.status(200).json({ data: [], success: true })
+
+      const prepearedUsers = users.map((item) => {
+        const data = item.toJSON()
+        return prepareUserData(data)
+      })
+
+      res.status(200).json({
+        data: prepearedUsers,
+        success: true,
+      })
+    } catch (error) {
+      console.error(error)
+    }
+  }
 }
 
 module.exports = new UserController()

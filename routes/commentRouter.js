@@ -15,5 +15,6 @@ router.get(
   timeoutMiddleware,
   commentController.getPhotoComments
 )
+router.get('/getAllComments', commentController.getAllComments)
 
 module.exports = router

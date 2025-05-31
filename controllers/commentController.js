@@ -1,6 +1,6 @@
 const ApiError = require('../error/ApiError')
 const { createUserAvatarUrl } = require('../helpers/user')
-const { Comment, User } = require('../models/models')
+const { Comment, User, Photo } = require('../models/models')
 
 const userObject = {
   model: User,
@@ -54,6 +54,25 @@ class CommentController {
       const { user } = item
       user.dataValues.avatar_src = createUserAvatarUrl(user)
     })
+
+    res.status(200).json({
+      data: comments,
+      success: true,
+    })
+  }
+
+  async getAllComments(req, res, next) {
+    const comments = await Comment.findAll({
+      include: [
+        userObject,
+        {
+          model: Photo,
+          attributes: ['id', 'name'],
+        },
+      ],
+    })
+
+    if (!comments) return res.status(200).json({ data: [], success: true })
 
     res.status(200).json({
       data: comments,
