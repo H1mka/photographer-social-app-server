@@ -1,6 +1,7 @@
 const ApiError = require('../error/ApiError')
 const Helper = require('../helpers/helper')
 const FilesHelper = require('../helpers/filesHelper')
+const { createUserAvatarUrl } = require('../helpers/user')
 const { Photo, Tag, User, Collection } = require('../models/models')
 
 const tagObject = {
@@ -11,7 +12,7 @@ const tagObject = {
 
 const userObject = {
   model: User,
-  attributes: ['id', 'name', 'last_name'],
+  attributes: ['id', 'name', 'last_name', 'avatar', 'avatar_folder'],
 }
 
 const handleGetOnePhoto = async (id) => {
@@ -140,6 +141,9 @@ class PhotoController {
       // add photo src
       photos.rows = photos.rows.map((item) => {
         item.dataValues.src = Helper.createPhotoUrl(item)
+        item.dataValues.user.dataValues.avatar_src = createUserAvatarUrl(
+          item.dataValues.user
+        )
         return item
       })
 
@@ -166,6 +170,9 @@ class PhotoController {
       // add photo src
       photos.rows = photos.rows.map((item) => {
         item.dataValues.src = Helper.createPhotoUrl(item)
+        item.dataValues.user.dataValues.avatar_src = createUserAvatarUrl(
+          item.dataValues.user
+        )
         return item
       })
 
